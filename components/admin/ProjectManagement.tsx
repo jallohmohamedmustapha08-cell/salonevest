@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 interface Project {
     id: number;
     title: string;
@@ -6,6 +7,7 @@ interface Project {
     score: number;
     status: string;
     funding: number;
+    released: number; // New field
     goal: number;
     assigned_staff_id?: string;
 }
@@ -19,6 +21,9 @@ interface ProjectManagementProps {
 }
 
 export default function ProjectManagement({ projects, staff, handleApproveProject, handleRejectProject, onActionComplete }: ProjectManagementProps) {
+    const [releasingProject, setReleasingProject] = useState<Project | null>(null);
+    const [releaseAmount, setReleaseAmount] = useState("");
+    const [isReleasing, setIsReleasing] = useState(false);
 
     const handleAssignStaff = async (projectId: number, staffId: string) => {
         if (!staffId || staffId === "Assign Staff...") return;
@@ -30,6 +35,34 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
         } else {
             alert("Error assigning project: " + result.error);
         }
+    };
+
+    const handleReleaseFunds = async () => {
+        if (!releasingProject || !releaseAmount) return;
+        const amount = parseFloat(releaseAmount);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        if (amount > (releasingProject.funding - releasingProject.released)) {
+            alert("Cannot release more than available funds.");
+            return;
+        }
+
+        setIsReleasing(true);
+        const result = await import("@/app/actions/release-funds").then(mod => mod.releaseFunds(releasingProject.id, amount));
+
+        if (result.success) {
+            alert(`Successfully released $${amount} to the entrepreneur!`);
+            setReleasingProject(null);
+            setReleaseAmount("");
+            if (onActionComplete) onActionComplete();
+        } else {
+            alert("Error releasing funds: " + result.error);
+        }
+        setIsReleasing(false);
     };
 
     const [filter, setFilter] = useState('All');
@@ -44,6 +77,59 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
     return (
         <div className="space-y-6">
             <h2 className="text-3xl font-bold text-white">Project Management</h2>
+
+            {/* Release Funds Modal */}
+            {releasingProject && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 p-8 rounded-xl border border-gray-600 max-w-sm w-full relative">
+                        <button
+                            onClick={() => setReleasingProject(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                        >
+                            ✕
+                        </button>
+                        <h3 className="text-xl font-bold mb-4 text-white">Release Funds</h3>
+                        <p className="text-gray-400 text-sm mb-4">Project: <span className="text-white font-bold">{releasingProject.title}</span></p>
+
+                        <div className="space-y-4">
+                            <div className="bg-gray-700/50 p-3 rounded-lg">
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                                    <span>Total Raised:</span>
+                                    <span className="text-white">${releasingProject.funding}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                                    <span>Already Released:</span>
+                                    <span className="text-white">${releasingProject.released}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold text-blue-400 pt-2 border-t border-gray-600">
+                                    <span>Available:</span>
+                                    <span>${releasingProject.funding - releasingProject.released}</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold mb-1 text-gray-300">Amount to Release ($)</label>
+                                <input
+                                    type="number"
+                                    value={releaseAmount}
+                                    onChange={(e) => setReleaseAmount(e.target.value)}
+                                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                                    max={releasingProject.funding - releasingProject.released}
+                                    placeholder="0.00"
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleReleaseFunds}
+                                disabled={isReleasing}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition disabled:opacity-50"
+                            >
+                                {isReleasing ? "Processing..." : "Confirm Release"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex gap-4 mb-6">
                 <button
@@ -84,7 +170,11 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                 </div>
                                 <p className="text-gray-400 text-sm">Farmer: <span className="text-white">{project.farmer}</span></p>
                                 <div className="mt-2 text-sm text-gray-500">
-                                    Raised: <span className="text-white">${project.funding}</span> / ${project.goal}
+                                    Raised: <span className="text-white font-bold">${project.funding}</span>
+                                    <span className="mx-2">|</span>
+                                    Released: <span className="text-green-400 font-bold">${project.released || 0}</span>
+                                    <span className="mx-2">/</span>
+                                    Goal: ${project.goal}
                                 </div>
                             </div>
 
@@ -105,11 +195,21 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                             <option key={s.id} value={s.id}>{s.full_name || s.name}</option>
                                         ))}
                                     </select>
+
                                     {project.status === 'Pending' && (
                                         <div className="flex gap-2">
                                             <button onClick={() => handleApproveProject(project.id)} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm font-bold transition">Approve</button>
                                             <button onClick={() => handleRejectProject(project.id)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold transition">Reject</button>
                                         </div>
+                                    )}
+
+                                    {project.status === 'Active' && (
+                                        <button
+                                            onClick={() => setReleasingProject(project)}
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-bold transition"
+                                        >
+                                            Release Funds
+                                        </button>
                                     )}
                                 </div>
                             </div>

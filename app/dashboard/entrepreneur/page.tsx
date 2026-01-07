@@ -10,6 +10,7 @@ interface Project {
     title: string;
     description: string;
     funding: number;
+    released: number; // New field
     goal: number;
     status: string;
     image_url: string | null;
@@ -20,7 +21,7 @@ export default function EntrepreneurDashboard() {
     const [user, setUser] = useState<any>(null);
     const [myProjects, setMyProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({ totalRaised: 0, activeCampaigns: 0 });
+    const [stats, setStats] = useState({ totalRaised: 0, totalReleased: 0, activeCampaigns: 0 }); // Added totalReleased
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const router = useRouter();
 
@@ -44,10 +45,12 @@ export default function EntrepreneurDashboard() {
 
             // Calculate stats
             const raised = projects.reduce((sum, p) => sum + (p.funding || 0), 0);
+            const released = projects.reduce((sum, p) => sum + (p.released || 0), 0);
             const active = projects.filter(p => p.status === 'Active').length;
 
             setStats({
                 totalRaised: raised,
+                totalReleased: released,
                 activeCampaigns: active
             });
         }
@@ -59,8 +62,8 @@ export default function EntrepreneurDashboard() {
     }, [router]);
 
     const handleWithdraw = () => {
-        const amount = stats.totalRaised;
-        if (amount <= 0) return alert("No funds available to withdraw.");
+        const amount = stats.totalReleased;
+        if (amount <= 0) return alert("No released funds available to withdraw. Funds are held in escrow until released by admin.");
         alert(`Initiated withdrawal of $${amount.toLocaleString()} to your Orange Money wallet. (Simulation)`);
     };
 
@@ -92,6 +95,7 @@ export default function EntrepreneurDashboard() {
                     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
                         <h2 className="text-gray-400 text-sm font-bold uppercase mb-2">Total Funds Raised</h2>
                         <p className="text-4xl font-bold text-green-400">${stats.totalRaised.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 mt-2">Locked in Escrow</p>
                     </div>
                     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
                         <h2 className="text-gray-400 text-sm font-bold uppercase mb-2">Active Campaigns</h2>
@@ -100,7 +104,8 @@ export default function EntrepreneurDashboard() {
                     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between">
                         <div>
                             <h2 className="text-gray-400 text-sm font-bold uppercase mb-2">Available for Withdrawal</h2>
-                            <p className="text-4xl font-bold text-white">${stats.totalRaised.toLocaleString()}</p>
+                            <p className="text-4xl font-bold text-white">${stats.totalReleased.toLocaleString()}</p>
+                            <p className="text-xs text-blue-400 mt-1">Funds released by Admin</p>
                         </div>
                         <button
                             onClick={handleWithdraw}
@@ -170,6 +175,9 @@ export default function EntrepreneurDashboard() {
                                             <div className="flex justify-between text-sm mb-1">
                                                 <span className="text-white font-bold">${(project.funding || 0).toLocaleString()}</span>
                                                 <span className="text-gray-500">Goal: ${(project.goal || 0).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-blue-400 mb-2">
+                                                <span>Unlocked: ${(project.released || 0).toLocaleString()}</span>
                                             </div>
                                             <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
                                                 <div
