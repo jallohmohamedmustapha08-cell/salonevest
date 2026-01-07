@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 
-export async function makeInvestment(projectId: number, userId: string, amount: number) {
+export async function makeInvestment(projectId: number, userId: string, amount: number, paymentMethod: string = 'mobile_money', txHash: string | null = null) {
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -20,7 +20,9 @@ export async function makeInvestment(projectId: number, userId: string, amount: 
         const { data, error } = await supabase.rpc('invest', {
             project_id_arg: projectId,
             investor_id_arg: userId,
-            amount_arg: amount
+            amount_arg: amount,
+            payment_method_arg: paymentMethod,
+            tx_hash_arg: txHash
         });
 
         if (error) {

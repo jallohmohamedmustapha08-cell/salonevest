@@ -83,11 +83,11 @@ export default function InvestorDashboard() {
         router.push("/login");
     };
 
-    const handleInvest = async (amount: number) => {
+    const handleInvest = async (amount: number, paymentMethod: string, txHash?: string | null) => {
         if (!selectedProject || !user) return;
         setIsInvestLoading(true);
 
-        const result = await import("@/app/actions/invest-in-project").then(mod => mod.makeInvestment(selectedProject.id, user.id, amount));
+        const result = await import("@/app/actions/invest-in-project").then(mod => mod.makeInvestment(selectedProject.id, user.id, amount, paymentMethod, txHash || null));
 
         if (result.success) {
             alert(`Successfully invested $${amount} in ${selectedProject.title}!`);
