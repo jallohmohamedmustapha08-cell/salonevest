@@ -25,7 +25,7 @@ export default function Explore() {
             const { data } = await supabase
                 .from('projects')
                 .select('*')
-                .eq('status', 'Active') // Only show active projects
+                .eq('status', 'Active') // STRICTLY show only Active projects. Paused/Pending must be hidden.
                 .order('created_at', { ascending: false });
 
             if (data) setProjects(data);
@@ -79,20 +79,29 @@ export default function Explore() {
                     <div className="text-center text-gray-500 p-10 bg-gray-800 rounded-xl">No active projects found yet.</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {projects.map((project) => (
-                            <ProjectCard
-                                key={project.id}
-                                id={String(project.id)}
-                                title={project.title}
-                                category="General" // Default for now
-                                location={project.location || "Sierra Leone"}
-                                imageUrl={project.image_url || "https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=2070&auto=format&fit=crop"}
-                                fundingGoal={project.goal}
-                                currentFunding={project.funding || 0}
-                                trustScore={project.trust_score || 85}
-                                minInvestment={50} // Default
-                            />
-                        ))}
+                        {projects.map((project) => {
+                            // Simple keyword inference for category
+                            const lowerDesc = (project.description + project.title).toLowerCase();
+                            let inferredCategory = "General";
+                            if (lowerDesc.includes('farm') || lowerDesc.includes('rice') || lowerDesc.includes('crop') || lowerDesc.includes('cocoa')) inferredCategory = "Agriculture";
+                            else if (lowerDesc.includes('tech') || lowerDesc.includes('app') || lowerDesc.includes('digital')) inferredCategory = "Technology";
+                            else if (lowerDesc.includes('shop') || lowerDesc.includes('market') || lowerDesc.includes('retail')) inferredCategory = "Retail";
+
+                            return (
+                                <ProjectCard
+                                    key={project.id}
+                                    id={String(project.id)}
+                                    title={project.title}
+                                    category={inferredCategory}
+                                    location={project.location || "Sierra Leone"}
+                                    imageUrl={project.image_url || "https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=2070&auto=format&fit=crop"}
+                                    fundingGoal={project.goal}
+                                    currentFunding={project.funding || 0}
+                                    trustScore={project.trust_score || 0}
+                                    minInvestment={50} // Default
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </section>

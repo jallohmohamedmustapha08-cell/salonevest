@@ -165,7 +165,8 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                     <h3 className="text-xl font-bold text-white">{project.title}</h3>
                                     <span className={`px-2 py-0.5 text-xs rounded font-bold ${project.status === 'Pending' ? 'bg-yellow-900/50 text-yellow-400' :
                                         project.status === 'Active' ? 'bg-green-900/50 text-green-400' :
-                                            'bg-blue-900/50 text-blue-400'
+                                            project.status === 'Paused' ? 'bg-orange-900/50 text-orange-400' :
+                                                'bg-blue-900/50 text-blue-400'
                                         }`}>{project.status}</span>
                                 </div>
                                 <p className="text-gray-400 text-sm">Farmer: <span className="text-white">{project.farmer}</span></p>
@@ -196,21 +197,56 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                         ))}
                                     </select>
 
-                                    {project.status === 'Pending' && (
-                                        <div className="flex gap-2">
-                                            <button onClick={() => handleApproveProject(project.id)} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm font-bold transition">Approve</button>
-                                            <button onClick={() => handleRejectProject(project.id)} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold transition">Reject</button>
-                                        </div>
-                                    )}
+                                    {/* Action Buttons based on Status */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {project.status === 'Pending' && (
+                                            <>
+                                                <button onClick={() => handleApproveProject(project.id)} className="bg-green-600 hover:bg-green-700 text-white py-1.5 rounded text-xs font-bold transition">Approve</button>
+                                                <button onClick={() => handleRejectProject(project.id)} className="bg-red-600 hover:bg-red-700 text-white py-1.5 rounded text-xs font-bold transition">Reject</button>
+                                            </>
+                                        )}
 
-                                    {project.status === 'Active' && (
+                                        {project.status === 'Active' && (
+                                            <>
+                                                <button
+                                                    onClick={() => setReleasingProject(project)}
+                                                    className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded text-xs font-bold transition"
+                                                >
+                                                    Release $$$
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        const mod = await import("@/app/actions/update-project-status");
+                                                        if (confirm("Unverify? This will reset status to Pending.")) {
+                                                            await mod.updateProjectStatus(project.id, 'Pending');
+                                                            onActionComplete?.();
+                                                        }
+                                                    }}
+                                                    className="col-span-2 bg-gray-600 hover:bg-gray-700 text-white py-1.5 rounded text-xs font-bold transition"
+                                                >
+                                                    Unverify
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {project.status === 'Paused' && (
+                                            // No buttons for Paused status after removing Resume
+                                            <></>
+                                        )}
+
                                         <button
-                                            onClick={() => setReleasingProject(project)}
-                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-bold transition"
+                                            onClick={async () => {
+                                                if (confirm("PERMANENTLY DELETE project? This cannot be undone.")) {
+                                                    const mod = await import("@/app/actions/delete-project");
+                                                    await mod.deleteProject(project.id);
+                                                    onActionComplete?.();
+                                                }
+                                            }}
+                                            className="col-span-2 bg-red-900/80 hover:bg-red-900 text-white py-1.5 rounded text-xs font-bold transition border border-red-800"
                                         >
-                                            Release Funds
+                                            Delete Project
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

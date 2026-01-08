@@ -78,6 +78,64 @@ export default function PublicProjectDetails() {
                         </div>
                     </div>
                 </div>
+
+                {/* AI Trust Score Analysis Section */}
+                {project.ai_analysis_result && (
+                    <div className="mb-10 bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">
+                                AI Trust & Risk Analysis
+                            </h3>
+                            <div className={`px-4 py-2 rounded-full font-bold text-xl ${(project.trust_score || 0) >= 80 ? 'bg-green-900 text-green-300' :
+                                (project.trust_score || 0) >= 50 ? 'bg-yellow-900 text-yellow-300' :
+                                    'bg-red-900 text-red-300'
+                                }`}>
+                                Trust Score: {project.trust_score}/100
+                            </div>
+                        </div>
+
+                        <p className="text-gray-300 mb-6 text-lg italic border-l-4 border-blue-500 pl-4 py-2 bg-gray-900/50 rounded-r-lg">
+                            "{project.ai_analysis_result.reasoning}"
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {project.ai_analysis_result.positive_signals && (
+                                <div className="bg-green-900/20 p-4 rounded-lg border border-green-800/50">
+                                    <h4 className="flex items-center gap-2 text-green-400 font-bold mb-3">
+                                        <span>✅</span> Positive Signals
+                                    </h4>
+                                    <ul className="space-y-2">
+                                        {project.ai_analysis_result.positive_signals.map((signal: string, i: number) => (
+                                            <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
+                                                <span className="mt-1 block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                {signal}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {project.ai_analysis_result.risk_factors && (
+                                <div className="bg-red-900/20 p-4 rounded-lg border border-red-800/50">
+                                    <h4 className="flex items-center gap-2 text-red-400 font-bold mb-3">
+                                        <span>⚠️</span> Risk Factors
+                                    </h4>
+                                    <ul className="space-y-2">
+                                        {project.ai_analysis_result.risk_factors.map((risk: string, i: number) => (
+                                            <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
+                                                <span className="mt-1 block w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                                {risk}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                        <div className="mt-4 text-xs text-gray-500 text-right">
+                            Analysis by Google Gemini • Last Updated: {new Date().toLocaleDateString()}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

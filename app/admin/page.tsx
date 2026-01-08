@@ -65,6 +65,7 @@ export default function AdminDashboard() {
             const formattedProjects = projectsData.map(p => ({
                 ...p,
                 farmer: p.entrepreneur?.full_name || 'Unknown',
+                score: p.trust_score || 0,
             }));
             setProjects(formattedProjects);
         }

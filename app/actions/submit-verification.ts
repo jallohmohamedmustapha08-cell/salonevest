@@ -58,6 +58,11 @@ export async function submitVerificationReport(formData: FormData) {
 
         if (error) throw error;
 
+        // Trigger AI Trust Score Re-Analysis
+        /* @ts-ignore */
+        const { analyzeProjectTrustScore } = await import("./analyze-trust-score");
+        await analyzeProjectTrustScore(projectId);
+
         revalidatePath("/dashboard/staff");
         // revalidatePath("/admin/projects"); // Future: Show in admin panel
         return { success: true };
