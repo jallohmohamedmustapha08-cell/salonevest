@@ -6,11 +6,13 @@ import { createProject } from "@/app/actions/create-project";
 
 interface ProjectUploadFormProps {
     userId: string;
+    userGroups: any[]; // Or define strict type
 }
 
-export default function ProjectUploadForm({ userId }: ProjectUploadFormProps) {
+export default function ProjectUploadForm({ userId, userGroups }: ProjectUploadFormProps) {
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
+    const [selectedGroupId, setSelectedGroupId] = useState<string>("");
     const router = useRouter();
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,6 +30,9 @@ export default function ProjectUploadForm({ userId }: ProjectUploadFormProps) {
 
             // Append userId to formData
             formData.set("userId", userId);
+            if (selectedGroupId) {
+                formData.set("groupId", selectedGroupId);
+            }
 
             const result = await createProject(formData);
             console.log("Server action result:", result);
@@ -48,6 +53,26 @@ export default function ProjectUploadForm({ userId }: ProjectUploadFormProps) {
 
     return (
         <form action={handleSubmit} className="space-y-6 bg-gray-800 p-8 rounded-xl border border-gray-700 max-w-2xl mx-auto shadow-2xl">
+            {/* Group Selection */}
+            {userGroups && userGroups.length > 0 && (
+                <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-500/30">
+                    <label className="block text-blue-200 mb-2 font-bold text-sm">Campaign Owner</label>
+                    <select
+                        value={selectedGroupId}
+                        onChange={(e) => setSelectedGroupId(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 transition"
+                    >
+                        <option value="">Myself (Individual)</option>
+                        {userGroups.map(g => (
+                            <option key={g.id} value={g.id}>Group: {g.name}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-blue-400 mt-2">
+                        {selectedGroupId ? "Funds will be managed by the Group Leader and require member approval." : "Funds will be sent directly to your wallet."}
+                    </p>
+                </div>
+            )}
+
             {/* Title */}
             <div>
                 <label className="block text-gray-400 mb-2 font-bold">Project Title</label>

@@ -29,6 +29,10 @@ export default async function ProjectUploadPage() {
         redirect("/login");
     }
 
+    // Fetch User Groups
+    const { getUserGroups } = await import("@/app/actions/groups");
+    const { groups } = await getUserGroups(user.id);
+
     return (
         <div className="min-h-screen bg-gray-900 text-white p-8">
             <header className="mb-10 flex justify-between items-center bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
@@ -44,7 +48,7 @@ export default async function ProjectUploadPage() {
 
             {/* Form Container */}
             <main>
-                <ProjectUploadForm userId={user.id} />
+                <ProjectUploadForm userId={user.id} userGroups={groups || []} />
             </main>
         </div>
     );

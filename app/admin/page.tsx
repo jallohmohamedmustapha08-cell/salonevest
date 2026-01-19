@@ -8,20 +8,22 @@ import UserManagement from "@/components/admin/UserManagement";
 import StaffManagement from "@/components/admin/StaffManagement";
 import ProjectManagement from "@/components/admin/ProjectManagement";
 import VerificationReports from "@/components/admin/VerificationReports";
+import WithdrawalManagement from "@/components/admin/WithdrawalManagement";
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("overview");
     const [showAddStaff, setShowAddStaff] = useState(false);
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
-    const [reports, setReports] = useState<any[]>([]); // New State
+    const [reports, setReports] = useState<any[]>([]);
+    const [withdrawals, setWithdrawals] = useState<any[]>([]); // New State
     const [loading, setLoading] = useState(true);
 
     // Stats
     const stats = [
         { label: "Total Users", value: users.length.toString(), change: "+12%" },
         { label: "Active Projects", value: projects.filter(p => p.status === 'Active').length.toString(), change: "+5" },
-        { label: "Pending Reports", value: reports.filter(r => r.status === 'Submitted').length.toString(), change: reports.filter(r => r.status === 'Submitted').length > 0 ? "Action Needed" : "All Clear" },
+        { label: "Pending Withdrawals", value: withdrawals.filter(w => w.status === 'pending').length.toString(), change: withdrawals.filter(w => w.status === 'pending').length > 0 ? "Action Needed" : "All Clear" },
         { label: "Pending Verifications", value: projects.filter(p => p.status === 'Pending').length.toString(), change: "-2" },
     ];
 
@@ -92,6 +94,19 @@ export default function AdminDashboard() {
                 created_at: r.created_at
             }));
             setReports(formattedReports);
+        }
+
+        // Fetch Withdrawals (New)
+        const { data: withdrawalData } = await supabase
+            .from('withdrawal_requests')
+            .select(`
+                *,
+                user:profiles(full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (withdrawalData) {
+            setWithdrawals(withdrawalData);
         }
 
         setLoading(false);
@@ -260,6 +275,14 @@ export default function AdminDashboard() {
                     <VerificationReports
                         reports={reports}
                         handleUpdateStatus={handleUpdateReportStatus}
+                    />
+                )}
+
+                {/* Withdrawals Tab (New) */}
+                {activeTab === "withdrawals" && (
+                    <WithdrawalManagement
+                        requests={withdrawals}
+                        onActionComplete={fetchData}
                     />
                 )}
 

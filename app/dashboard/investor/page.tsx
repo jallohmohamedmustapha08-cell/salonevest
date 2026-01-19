@@ -27,9 +27,12 @@ export default function InvestorDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeProjects, setActiveProjects] = useState<Project[]>([]);
     const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
+    const [walletBalance, setWalletBalance] = useState(0);
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const router = useRouter();
+
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalInvested: 0, projectsFunded: 0 });
-    const router = useRouter();
 
     // Investment Modal State
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -43,7 +46,12 @@ export default function InvestorDashboard() {
         }
         setUser(user);
 
+        // Fetch Wallet Balance (Real)
+        const balanceRes = await import("@/app/actions/financials").then(mod => mod.getWalletBalance(user.id));
+        if (balanceRes.success) setWalletBalance(balanceRes.balance || 0);
+
         // Fetch user's investments
+        // ... (keep existing investment fetch)
         const { data: investments } = await supabase
             .from('investments')
             .select('*, project:projects(*)')
@@ -59,7 +67,8 @@ export default function InvestorDashboard() {
             });
         }
 
-        // Fetch Active Projects (Opportunities)
+        // Fetch Active Projects
+        // ... (keep existing project fetch)
         const { data: projects } = await supabase
             .from('projects')
             .select('*')
@@ -77,6 +86,7 @@ export default function InvestorDashboard() {
         fetchData();
     }, [router]);
 
+    // ... (keep handleLogout and handleInvest)
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.refresh();
@@ -101,8 +111,24 @@ export default function InvestorDashboard() {
 
     if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Loading...</div>;
 
+    // Import Dynamic Modal
+    const WithdrawalModal = require("@/components/investor/WithdrawalModal").default;
+
     return (
         <div className="min-h-screen bg-gray-900 text-white font-sans">
+            {/* Withdraw Modal */}
+            {isWithdrawModalOpen && (
+                <WithdrawalModal
+                    userId={user.id}
+                    availableBalance={walletBalance}
+                    onClose={() => setIsWithdrawModalOpen(false)}
+                    onSuccess={() => {
+                        alert("Withdrawal Request Submitted!");
+                        fetchData(); // Refresh balance
+                    }}
+                />
+            )}
+
             {/* Detailed Modal */}
             {selectedProject && (
                 <ProjectDetailsModal
@@ -119,6 +145,7 @@ export default function InvestorDashboard() {
                         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Investor Dashboard</h1>
                         <p className="text-gray-400">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
                     </div>
+                    <button onClick={handleLogout} className="px-4 py-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-900/20 text-sm font-bold transition">Sign Out</button>
                 </header>
 
                 {/* Stats Row */}
@@ -131,16 +158,31 @@ export default function InvestorDashboard() {
                         <h2 className="text-gray-400 text-sm font-bold uppercase mb-2">Projects Funded</h2>
                         <p className="text-4xl font-bold text-blue-400">{stats.projectsFunded}</p>
                     </div>
-                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-                        <h2 className="text-gray-400 text-sm font-bold uppercase mb-2">Wallet Balance</h2>
-                        <p className="text-4xl font-bold text-gray-300">$50,000</p>
-                        <span className="text-xs text-gray-500">(Demo Funds)</span>
+
+                    {/* Active Wallet Card */}
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-blue-500/30 shadow-lg relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                        <div className="relative z-10">
+                            <h2 className="text-blue-200 text-sm font-bold uppercase mb-2 flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                Available Balance
+                            </h2>
+                            <div className="flex justify-between items-end">
+                                <p className="text-4xl font-bold text-white tracking-tight">${walletBalance.toLocaleString()}</p>
+                                <button
+                                    onClick={() => setIsWithdrawModalOpen(true)}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-lg shadow-blue-900/20 flex items-center gap-1"
+                                >
+                                    Withdraw <span className="text-blue-200">&uarr;</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-
+                    {/* ... (Keep Opportunities and Portfolio sections identical) */}
                     {/* Opportunities Section */}
                     <div>
                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">

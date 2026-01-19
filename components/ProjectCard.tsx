@@ -10,6 +10,8 @@ interface ProjectCardProps {
     currentFunding: number;
     trustScore: number;
     minInvestment: number;
+    groupName?: string;
+    groupScore?: number;
 }
 
 export default function ProjectCard({
@@ -22,7 +24,9 @@ export default function ProjectCard({
     currentFunding,
     trustScore,
     minInvestment,
-}: ProjectCardProps) {
+    groupName,
+    groupScore
+}: ProjectCardProps & { groupName?: string; groupScore?: number }) {
     const progress = Math.min((currentFunding / fundingGoal) * 100, 100);
 
     return (
@@ -37,8 +41,13 @@ export default function ProjectCard({
                     <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-full border border-white/20">
                         {category}
                     </div>
-                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                        Trust Score: {trustScore}/100
+                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center gap-2">
+                        <span>Trust Score: {trustScore}/100</span>
+                        {groupName && (
+                            <span className="bg-blue-600 px-2 py-0.5 rounded-full border border-blue-400" title={`Group Responsibility Score: ${groupScore}`}>
+                                👥 {groupName} ({groupScore})
+                            </span>
+                        )}
                     </div>
                 </div>
 

@@ -14,6 +14,7 @@ interface Project {
     status: string;
     location: string;
     trust_score: number;
+    group?: { name: string; joint_liability_score: number };
 }
 
 export default function Explore() {
@@ -24,7 +25,7 @@ export default function Explore() {
         const fetchProjects = async () => {
             const { data } = await supabase
                 .from('projects')
-                .select('*')
+                .select('*, group:groups(name, joint_liability_score)')
                 .eq('status', 'Active') // STRICTLY show only Active projects. Paused/Pending must be hidden.
                 .order('created_at', { ascending: false });
 
@@ -99,6 +100,8 @@ export default function Explore() {
                                     currentFunding={project.funding || 0}
                                     trustScore={project.trust_score || 0}
                                     minInvestment={50} // Default
+                                    groupName={project.group?.name}
+                                    groupScore={project.group?.joint_liability_score}
                                 />
                             );
                         })}

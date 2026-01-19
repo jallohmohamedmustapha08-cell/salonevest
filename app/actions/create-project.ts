@@ -32,7 +32,8 @@ export async function createProject(formData: FormData) {
     const location = formData.get("location") as string;
     const category = formData.get("category") as string;
     const imageFile = formData.get("image") as File;
-    const userId = formData.get("userId") as string; // Passed from hidden input for simplicity
+    const userId = formData.get("userId") as string;
+    const groupId = formData.get("groupId") as string; // Optional group ID
 
     if (!title || !goal || !userId) {
         return { error: "Missing required fields" };
@@ -76,6 +77,7 @@ export async function createProject(formData: FormData) {
             description,
             goal: parseFloat(goal),
             entrepreneur_id: userId,
+            group_id: groupId || null, // Add group_id
             status: 'Pending',
             image_url: imageUrl,
             location,

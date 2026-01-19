@@ -25,6 +25,11 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
     const [releaseAmount, setReleaseAmount] = useState("");
     const [isReleasing, setIsReleasing] = useState(false);
 
+    // Distribute Returns State
+    const [distributingProject, setDistributingProject] = useState<Project | null>(null);
+    const [returnAmount, setReturnAmount] = useState("");
+    const [isDistributing, setIsDistributing] = useState(false);
+
     const handleAssignStaff = async (projectId: number, staffId: string) => {
         if (!staffId || staffId === "Assign Staff...") return;
 
@@ -52,10 +57,18 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
         }
 
         setIsReleasing(true);
-        const result = await import("@/app/actions/release-funds").then(mod => mod.releaseFunds(releasingProject.id, amount));
+        // Get Admin ID
+        const { data: { user } } = await import("@/lib/supabaseClient").then(mod => mod.supabase.auth.getUser());
+        if (!user) {
+            alert("You must be logged in.");
+            setIsReleasing(false);
+            return;
+        }
+
+        const result = await import("@/app/actions/payouts").then(mod => mod.releaseProjectFunds(releasingProject.id, user.id, amount));
 
         if (result.success) {
-            alert(`Successfully released $${amount} to the entrepreneur!`);
+            alert(result.message || `Successfully released $${amount}!`);
             setReleasingProject(null);
             setReleaseAmount("");
             if (onActionComplete) onActionComplete();
@@ -63,6 +76,37 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
             alert("Error releasing funds: " + result.error);
         }
         setIsReleasing(false);
+    };
+
+    const handleDistributeReturns = async () => {
+        if (!distributingProject || !returnAmount) return;
+        const amount = parseFloat(returnAmount);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        setIsDistributing(true);
+        // Get Admin ID
+        const { data: { user } } = await import("@/lib/supabaseClient").then(mod => mod.supabase.auth.getUser());
+        if (!user) {
+            alert("You must be logged in.");
+            setIsDistributing(false);
+            return;
+        }
+
+        const result = await import("@/app/actions/financials").then(mod => mod.distributeReturns(distributingProject.id, amount, user.id));
+
+        if (result.success) {
+            alert(`Successfully distributed $${amount} to investors! Count: ${result.count}`);
+            setDistributingProject(null);
+            setReturnAmount("");
+            if (onActionComplete) onActionComplete();
+        } else {
+            alert("Error distributing returns: " + result.error);
+        }
+        setIsDistributing(false);
     };
 
     const [filter, setFilter] = useState('All');
@@ -130,6 +174,52 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                     </div>
                 </div>
             )}
+
+            {/* Distribute Returns Modal */}
+            {distributingProject && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 p-8 rounded-xl border border-green-500/50 max-w-sm w-full relative shadow-2xl shadow-green-900/20">
+                        <button
+                            onClick={() => setDistributingProject(null)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                        >
+                            ✕
+                        </button>
+                        <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+                            💸 Distribute Returns
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-4">Project: <span className="text-white font-bold">{distributingProject.title}</span></p>
+
+                        <div className="space-y-4">
+                            <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-500/20">
+                                <p className="text-xs text-blue-200 mb-1">
+                                    Enter the <strong>Total Profit/Repayment</strong> received. The system will automatically calculate and credit each investor's share.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold mb-1 text-gray-300">Total Amount Received ($)</label>
+                                <input
+                                    type="number"
+                                    value={returnAmount}
+                                    onChange={(e) => setReturnAmount(e.target.value)}
+                                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500"
+                                    placeholder="e.g. 15000"
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleDistributeReturns}
+                                disabled={isDistributing}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition disabled:opacity-50"
+                            >
+                                {isDistributing ? "Calculating & Distributing..." : "Distribute to Investors"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <div className="flex gap-4 mb-6">
                 <button
@@ -214,6 +304,16 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                                 >
                                                     Release $$$
                                                 </button>
+
+                                                {/* New Distribute Returns Button */}
+                                                <button
+                                                    onClick={() => setDistributingProject(project)}
+                                                    className="col-span-2 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded text-xs font-bold transition"
+                                                    title="Project Completed? Distribute profits to investors"
+                                                >
+                                                    Distribute Returns 💸
+                                                </button>
+
                                                 <button
                                                     onClick={async () => {
                                                         const mod = await import("@/app/actions/update-project-status");

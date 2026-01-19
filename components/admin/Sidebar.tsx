@@ -21,7 +21,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
                 <h1 className="text-2xl font-bold text-white tracking-tight">Salone<span className="text-green-500">Admin</span></h1>
             </div>
             <nav className="flex-1 overflow-y-auto py-4">
-                {["overview", "users", "staff", "projects", "verifications", "settings"].map((tab) => (
+                {["overview", "users", "staff", "projects", "verifications", "withdrawals", "settings"].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ProjectDetailsModal from "@/components/investor/ProjectDetailsModal";
+import GroupApprovals from "@/components/entrepreneur/GroupApprovals";
+import MyGroupsList from "@/components/entrepreneur/MyGroupsList";
 
 interface Project {
     id: number;
@@ -77,7 +79,7 @@ export default function EntrepreneurDashboard() {
                     project={selectedProject}
                     onClose={() => setSelectedProject(null)}
                     readOnly={true}
-                    onInvest={() => { }} // Providing no-op to satisfy potential strict TS, though readOnly handles UI
+                    onInvest={() => { }}
                     isInvestLoading={false}
                 />
             )}
@@ -89,6 +91,9 @@ export default function EntrepreneurDashboard() {
                         <p className="text-gray-400">Manage your campaigns and track funding.</p>
                     </div>
                 </header>
+
+                {/* Group Approvals Section */}
+                <GroupApprovals />
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -118,12 +123,26 @@ export default function EntrepreneurDashboard() {
 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">My Projects</h2>
-                    <button
-                        onClick={() => router.push('/dashboard/entrepreneur/upload')}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-green-900/20 transition transform hover:scale-105"
-                    >
-                        + Start New Campaign
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => router.push('/dashboard/entrepreneur/create-group')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20 transition transform hover:scale-105"
+                        >
+                            👥 Create Group
+                        </button>
+                        <button
+                            onClick={() => router.push('/dashboard/entrepreneur/upload')}
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-green-900/20 transition transform hover:scale-105"
+                        >
+                            + Start New Campaign
+                        </button>
+                    </div>
+                </div>
+
+                {/* My Groups Section */}
+                <div className="mb-12">
+                    <h2 className="text-2xl font-bold mb-4">My Groups</h2>
+                    <MyGroupsList userId={user?.id} />
                 </div>
 
                 {/* Projects Grid */}
