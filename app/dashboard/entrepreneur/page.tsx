@@ -17,6 +17,7 @@ interface Project {
     status: string;
     image_url: string | null;
     created_at: string;
+    entrepreneur_id?: string; // Optional since we might not always use it here, but good to have
 }
 
 export default function EntrepreneurDashboard() {
@@ -42,17 +43,26 @@ export default function EntrepreneurDashboard() {
             .eq('entrepreneur_id', user.id)
             .order('created_at', { ascending: false });
 
+        // Fetch released marketplace orders
+        const { data: releasedOrders } = await supabase
+            .from('marketplace_orders')
+            .select('total_amount')
+            .eq('entrepreneur_id', user.id)
+            .eq('escrow_status', 'Released');
+
         if (projects) {
             setMyProjects(projects);
 
             // Calculate stats
             const raised = projects.reduce((sum, p) => sum + (p.funding || 0), 0);
-            const released = projects.reduce((sum, p) => sum + (p.released || 0), 0);
+            const projectReleased = projects.reduce((sum, p) => sum + (p.released || 0), 0);
             const active = projects.filter(p => p.status === 'Active').length;
+
+            const marketplaceReleased = releasedOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
 
             setStats({
                 totalRaised: raised,
-                totalReleased: released,
+                totalReleased: projectReleased + marketplaceReleased,
                 activeCampaigns: active
             });
         }
@@ -79,6 +89,7 @@ export default function EntrepreneurDashboard() {
                     project={selectedProject}
                     onClose={() => setSelectedProject(null)}
                     readOnly={true}
+                    isOwner={true} // Enable owner view
                     onInvest={() => { }}
                     isInvestLoading={false}
                 />
@@ -135,6 +146,32 @@ export default function EntrepreneurDashboard() {
                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-green-900/20 transition transform hover:scale-105"
                         >
                             + Start New Campaign
+                        </button>
+                    </div>
+                </div>
+
+                {/* Marketplace Management Section */}
+                <div className="mb-12 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                    <h2 className="text-xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">Marketplace Management</h2>
+                    <p className="text-gray-400 mb-6">Sell your produce directly to investors and manage your orders.</p>
+                    <div className="flex flex-wrap gap-4">
+                        <button
+                            onClick={() => router.push('/dashboard/entrepreneur/products')}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-emerald-900/20 transition transform hover:scale-105 flex items-center"
+                        >
+                            📦 Manage Products
+                        </button>
+                        <button
+                            onClick={() => router.push('/dashboard/entrepreneur/orders')}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-indigo-900/20 transition transform hover:scale-105 flex items-center"
+                        >
+                            🛒 Manage Orders
+                        </button>
+                        <button
+                            onClick={() => router.push('/marketplace')}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center"
+                        >
+                            🏪 View Marketplace
                         </button>
                     </div>
                 </div>

@@ -26,6 +26,12 @@ export default function Home() {
             >
               For Farmers
             </Link>
+            <Link
+              href="/marketplace"
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg"
+            >
+              Marketplace
+            </Link>
           </div>
         </div>
       </section>

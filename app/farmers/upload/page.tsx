@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function UploadProject() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -13,6 +18,24 @@ export default function UploadProject() {
         cropType: "",
     });
 
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                // Not logged in -> Redirect to login
+                router.push("/login?redirect=/farmers/upload");
+                return;
+            }
+
+            // Check role if needed, or rely on middleware. 
+            // Ideally we redirect to the specialized dashboard upload:
+            // router.push('/dashboard/entrepreneur/upload');
+            // But if we want to keep this page working:
+            setLoading(false);
+        };
+        checkUser();
+    }, [router]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -20,13 +43,18 @@ export default function UploadProject() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log("Upload Project:", formData);
+        // Implement actual upload logic here or redirect to dashboard
+        alert("This is a demo page. Please use your Entrepreneur Dashboard to upload real projects.");
+        router.push('/dashboard/entrepreneur/upload');
     };
+
+    if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Loading...</div>;
 
     return (
         <div className="min-h-screen bg-gray-900 p-4 md:p-8 pb-20">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
-                    <Link href="/farmers" className="text-gray-400 hover:text-white flex items-center gap-2 mb-4">
+                    <Link href="/dashboard/entrepreneur" className="text-gray-400 hover:text-white flex items-center gap-2 mb-4">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                         </svg>

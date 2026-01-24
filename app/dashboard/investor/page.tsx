@@ -14,6 +14,7 @@ interface Project {
     image_url: string | null;
     status: string;
     location?: string;
+    entrepreneur_id: string;
 }
 
 interface Investment {
@@ -177,6 +178,28 @@ export default function InvestorDashboard() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Marketplace Orders Section */}
+                <div className="mb-12 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">Marketplace Orders</h2>
+                        <p className="text-gray-400">Track your purchases and confirm deliveries.</p>
+                    </div>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => router.push('/marketplace/orders')}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-orange-900/20 transition transform hover:scale-105 flex items-center"
+                        >
+                            📦 My Orders
+                        </button>
+                        <button
+                            onClick={() => router.push('/marketplace')}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center"
+                        >
+                            🏪 Browse Marketplace
+                        </button>
                     </div>
                 </div>
 

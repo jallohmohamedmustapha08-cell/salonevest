@@ -107,6 +107,14 @@ export default function Navbar({ user }: { user: any }) {
                   </Link>
                 </li>
                 <li>
+                  <Link
+                    href="/chat"
+                    className="block py-2 px-3 text-white font-bold rounded hover:bg-gray-700 md:hover:bg-transparent md:border-0 md:hover:text-green-400 md:p-0 transition"
+                  >
+                    Messages
+                  </Link>
+                </li>
+                <li>
                   <button
                     onClick={handleLogout}
                     className="block py-2 px-5 text-white bg-red-600 rounded-full hover:bg-red-700 transition shadow-lg font-bold text-sm"

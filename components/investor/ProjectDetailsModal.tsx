@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -10,6 +12,7 @@ interface Project {
     image_url: string | null;
     status: string;
     location?: string;
+    entrepreneur_id: string;
 }
 
 interface ProjectDetailsModalProps {
@@ -18,18 +21,24 @@ interface ProjectDetailsModalProps {
     onInvest?: (amount: number, paymentMethod: string, txHash?: string | null) => void;
     isInvestLoading?: boolean;
     readOnly?: boolean;
+    isOwner?: boolean; // New prop for Entrepreneur view
 }
 
-export default function ProjectDetailsModal({ project, onClose, onInvest, isInvestLoading, readOnly = false }: ProjectDetailsModalProps) {
+export default function ProjectDetailsModal({ project, onClose, onInvest, isInvestLoading, readOnly = false, isOwner = false }: ProjectDetailsModalProps) {
     const [reports, setReports] = useState<any[]>([]);
+    const [investors, setInvestors] = useState<any[]>([]); // New State
     const [loadingReports, setLoadingReports] = useState(true);
+    const [loadingInvestors, setLoadingInvestors] = useState(false); // New State
     const [investAmount, setInvestAmount] = useState<number>(100);
-    const [activeTab, setActiveTab] = useState<'details' | 'updates'>('details');
+    const [activeTab, setActiveTab] = useState<'details' | 'updates' | 'investors'>('details');
 
-    // Payment State
     const [paymentMethod, setPaymentMethod] = useState<'mobile_money' | 'crypto'>('mobile_money');
     const [txHash, setTxHash] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
+
+    // Router for chat
+    const { useRouter } = require("next/navigation");
+    const router = useRouter();
 
     useEffect(() => {
         const fetchReports = async () => {
@@ -44,8 +53,27 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
             setLoadingReports(false);
         };
 
+        const fetchInvestors = async () => {
+            if (!isOwner) return;
+            setLoadingInvestors(true);
+            // Fetch unique investors for this project
+            // We want to link to profiles to get names
+            const { data } = await supabase
+                .from('investments')
+                .select('investor_id, profiles:investor_id(full_name, email, role, id)')
+                .eq('project_id', project.id);
+
+            if (data) {
+                // De-duplicate investors
+                const uniqueInvestors = Array.from(new Map(data.map(item => [item.investor_id, item.profiles])).values());
+                setInvestors(uniqueInvestors);
+            }
+            setLoadingInvestors(false);
+        };
+
         fetchReports();
-    }, [project.id]);
+        fetchInvestors();
+    }, [project.id, isOwner]);
 
     const handleInvestClick = async () => {
         if (!onInvest) return;
@@ -76,6 +104,30 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
         }
     };
 
+    const handleMessageEntrepreneur = async () => {
+        if (!project.entrepreneur_id) return;
+        startChat(project.entrepreneur_id);
+    };
+
+    const handleMessageInvestor = async (investorId: string) => {
+        startChat(investorId);
+    };
+
+    const startChat = async (userId: string) => {
+        try {
+            const { createConversation } = await import("@/app/actions/chat");
+            const result = await createConversation(userId);
+            if (result.error) {
+                alert("Failed to start chat: " + result.error);
+            } else {
+                router.push(`/chat?id=${result.id}`);
+            }
+        } catch (error) {
+            console.error("Error starting chat:", error);
+            alert("Error starting chat");
+        }
+    }
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 animate-fade-in">
             <div className="bg-gray-800 rounded-xl border border-gray-600 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative flex flex-col">
@@ -84,23 +136,39 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
                     <div className="h-48 w-full relative shrink-0">
                         <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-transparent"></div>
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
-                        >
-                            ✕
-                        </button>
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            <button
+                                onClick={handleMessageEntrepreneur}
+                                className="bg-blue-600/90 hover:bg-blue-600 text-white rounded-full p-2 px-4 text-sm font-bold transition flex items-center gap-1"
+                            >
+                                💬 Message
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
+                            >
+                                ✕
+                            </button>
+                        </div>
                     </div>
                 )}
 
                 <div className="p-8 pt-4 flex-1">
                     {!project.image_url && (
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-white"
-                        >
-                            ✕
-                        </button>
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            <button
+                                onClick={handleMessageEntrepreneur}
+                                className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded-full px-4 py-1 text-sm font-bold transition flex items-center gap-1 border border-blue-600/30"
+                            >
+                                💬 Message
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
                     )}
 
                     <h2 className="text-3xl font-bold text-white mb-2">{project.title}</h2>
@@ -138,6 +206,15 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
                             Field Reports
                             <span className="bg-gray-700 text-xs px-2 py-0.5 rounded-full">{reports.length}</span>
                         </button>
+                        {isOwner && (
+                            <button
+                                onClick={() => setActiveTab('investors')}
+                                className={`px-6 py-3 font-bold text-sm transition border-b-2 flex items-center gap-2 ${activeTab === 'investors' ? 'border-blue-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}
+                            >
+                                Investors
+                                <span className="bg-gray-700 text-xs px-2 py-0.5 rounded-full">{investors.length}</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* Content */}
@@ -146,7 +223,7 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
                             <div className="text-gray-300 leading-relaxed text-lg">
                                 {project.description}
                             </div>
-                        ) : (
+                        ) : activeTab === 'updates' ? (
                             <div className="space-y-4">
                                 {loadingReports ? (
                                     <div className="text-center text-gray-500 py-4">Loading updates...</div>
@@ -165,6 +242,36 @@ export default function ProjectDetailsModal({ project, onClose, onInvest, isInve
                                             {report.image_url && (
                                                 <img src={report.image_url} alt="Evidence" className="w-full h-48 object-cover rounded-lg border border-gray-600" />
                                             )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {loadingInvestors ? (
+                                    <div className="text-center text-gray-500 py-4">Loading investors...</div>
+                                ) : investors.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-700/30 rounded-lg border border-gray-700 border-dashed">
+                                        <p className="text-gray-400">No investors yet.</p>
+                                    </div>
+                                ) : (
+                                    investors.map((inv: any) => (
+                                        <div key={inv.id} className="bg-gray-700/50 p-4 rounded-lg border border-gray-600 flex justify-between items-center transition hover:bg-gray-700">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                                    {inv.full_name?.charAt(0) || '?'}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white">{inv.full_name || "Anonymous Investor"}</h4>
+                                                    <p className="text-xs text-gray-400">{inv.role || 'Investor'}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleMessageInvestor(inv.id)}
+                                                className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2"
+                                            >
+                                                💬 Message
+                                            </button>
                                         </div>
                                     ))
                                 )}

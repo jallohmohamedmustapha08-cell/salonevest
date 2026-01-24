@@ -9,14 +9,23 @@ import StaffManagement from "@/components/admin/StaffManagement";
 import ProjectManagement from "@/components/admin/ProjectManagement";
 import VerificationReports from "@/components/admin/VerificationReports";
 import WithdrawalManagement from "@/components/admin/WithdrawalManagement";
+import MarketplaceManagement from "@/components/admin/MarketplaceManagement";
+import AdminProductList from "@/components/admin/AdminProductList";
+import MessagesManagement from "@/components/admin/MessagesManagement";
+import { getAllConversationsAdmin } from "@/app/actions/chat";
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("overview");
+    const [marketplaceTab, setMarketplaceTab] = useState<'orders' | 'products'>('orders'); // Sub-tab state
     const [showAddStaff, setShowAddStaff] = useState(false);
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
-    const [withdrawals, setWithdrawals] = useState<any[]>([]); // New State
+    const [withdrawals, setWithdrawals] = useState<any[]>([]);
+    const [marketplaceOrders, setMarketplaceOrders] = useState<any[]>([]);
+    const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]); // New State
+    const [conversations, setConversations] = useState<any[]>([]); // New State
+    const [currentUserId, setCurrentUserId] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
     // Stats
@@ -24,7 +33,7 @@ export default function AdminDashboard() {
         { label: "Total Users", value: users.length.toString(), change: "+12%" },
         { label: "Active Projects", value: projects.filter(p => p.status === 'Active').length.toString(), change: "+5" },
         { label: "Pending Withdrawals", value: withdrawals.filter(w => w.status === 'pending').length.toString(), change: withdrawals.filter(w => w.status === 'pending').length > 0 ? "Action Needed" : "All Clear" },
-        { label: "Pending Verifications", value: projects.filter(p => p.status === 'Pending').length.toString(), change: "-2" },
+        { label: "Pending Orders", value: marketplaceOrders.filter(o => o.status !== 'Completed' && o.status !== 'Delivered').length.toString(), change: "Marketplace" },
     ];
 
     const [staff, setStaff] = useState<any[]>([]);
@@ -96,7 +105,7 @@ export default function AdminDashboard() {
             setReports(formattedReports);
         }
 
-        // Fetch Withdrawals (New)
+        // Fetch Withdrawals
         const { data: withdrawalData } = await supabase
             .from('withdrawal_requests')
             .select(`
@@ -107,6 +116,47 @@ export default function AdminDashboard() {
 
         if (withdrawalData) {
             setWithdrawals(withdrawalData);
+        }
+
+        // Fetch Marketplace Orders
+        const { data: ordersData } = await supabase
+            .from('marketplace_orders')
+            .select(`
+                *,
+                marketplace_order_items (
+                    *,
+                    marketplace_products (title)
+                ),
+                profiles!buyer_id (full_name, email),
+                seller:profiles!entrepreneur_id (full_name, business_name)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (ordersData) {
+            setMarketplaceOrders(ordersData);
+        }
+
+        // Fetch Marketplace Products
+        const { data: productsData } = await supabase
+            .from('marketplace_products')
+            .select('*, profiles(full_name, business_name)')
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
+
+        if (productsData) {
+            setMarketplaceProducts(productsData);
+        }
+
+        // Fetch Conversations (Server Action)
+        const { conversations: chats, error: chatError } = await getAllConversationsAdmin();
+        if (chats) {
+            setConversations(chats);
+        }
+
+        // Get Current User
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            setCurrentUserId(user.id);
         }
 
         setLoading(false);
@@ -122,7 +172,6 @@ export default function AdminDashboard() {
 
         const result = await import("@/app/actions/update-user-status").then(mod => mod.updateUserStatus(id, { type: 'Certified' }));
         if (result.success) {
-            // alert("User verified successfully."); // Optional, maybe too noisy?
             fetchData();
         } else {
             alert("Error: " + result.error);
@@ -137,7 +186,6 @@ export default function AdminDashboard() {
 
             const result = await import("@/app/actions/update-user-status").then(mod => mod.updateUserStatus(id, { status: 'Banned' }));
             if (result.success) {
-                // alert("User banned.");
                 fetchData();
             } else {
                 alert("Error: " + result.error);
@@ -184,7 +232,6 @@ export default function AdminDashboard() {
 
         const result = await import("@/app/actions/update-project-status").then(mod => mod.updateProjectStatus(id, 'Active'));
         if (result.success) {
-            // alert("Project approved!");
             fetchData();
         } else {
             alert("Error: " + result.error);
@@ -199,7 +246,6 @@ export default function AdminDashboard() {
 
             const result = await import("@/app/actions/update-project-status").then(mod => mod.updateProjectStatus(id, 'Rejected'));
             if (result.success) {
-                // alert("Project rejected.");
                 fetchData();
             } else {
                 alert("Error: " + result.error);
@@ -278,11 +324,51 @@ export default function AdminDashboard() {
                     />
                 )}
 
-                {/* Withdrawals Tab (New) */}
+                {/* Withdrawals Tab */}
                 {activeTab === "withdrawals" && (
                     <WithdrawalManagement
                         requests={withdrawals}
                         onActionComplete={fetchData}
+                    />
+                )}
+
+                {/* Marketplace Tab */}
+                {activeTab === "marketplace" && (
+                    <div>
+                        <div className="flex gap-4 mb-6">
+                            <button
+                                onClick={() => setMarketplaceTab('orders')}
+                                className={`px-4 py-2 rounded-lg font-bold transition ${marketplaceTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                            >
+                                Orders
+                            </button>
+                            <button
+                                onClick={() => setMarketplaceTab('products')}
+                                className={`px-4 py-2 rounded-lg font-bold transition ${marketplaceTab === 'products' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                            >
+                                Products
+                            </button>
+                        </div>
+
+                        {marketplaceTab === 'orders' ? (
+                            <MarketplaceManagement
+                                orders={marketplaceOrders}
+                                onActionComplete={fetchData}
+                            />
+                        ) : (
+                            <AdminProductList
+                                products={marketplaceProducts}
+                                onActionComplete={fetchData}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {/* Messages Tab */}
+                {activeTab === "messages" && (
+                    <MessagesManagement
+                        conversations={conversations}
+                        currentUserId={currentUserId}
                     />
                 )}
 
