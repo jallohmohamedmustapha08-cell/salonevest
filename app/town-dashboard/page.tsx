@@ -2,13 +2,16 @@ import { createClient } from "@supabase/supabase-js";
 
 // Force valid UUID for demo if needed, but normally we verify auth
 // For public dashboard, we might use service role or public client
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-);
+// Client initialization moved to function scope
 
 async function getTownStats(location: string) {
+    // Force valid UUID for demo if needed, but normally we verify auth
+    // For public dashboard, we might use service role or public client
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     // 1. Fetch Projects in the area (assuming project location matches or entrepreneur location)
     // For simplicity, we filter by entrepreneur profile location = location
     const { data: profiles } = await supabase

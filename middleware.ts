@@ -31,9 +31,17 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    let user = null
+    try {
+        const {
+            data: { user: authUser },
+        } = await supabase.auth.getUser()
+        user = authUser
+    } catch (e) {
+        // console.error('Middleware Auth Error:', e)
+        // Treat as unauthenticated if token is invalid
+        user = null
+    }
 
     if (!user) {
         // Redirect to login if accessing protected routes without user

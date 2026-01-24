@@ -34,7 +34,14 @@ export default async function RootLayout({
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    user = authUser;
+  } catch (error) {
+    console.warn('RootLayout Auth Error:', error);
+    // Proceed as unauthenticated
+  }
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
