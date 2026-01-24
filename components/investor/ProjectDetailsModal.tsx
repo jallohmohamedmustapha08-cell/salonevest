@@ -12,7 +12,7 @@ interface Project {
     image_url: string | null;
     status: string;
     location?: string;
-    entrepreneur_id: string;
+    entrepreneur_id?: string;
 }
 
 interface ProjectDetailsModalProps {
