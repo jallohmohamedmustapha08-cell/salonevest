@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { getOpenTickets, sendModeratorMessage, getTicketMessages, updateTicketStatus } from "@/app/actions/support";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function ModeratorSupport() {
+interface ModeratorSupportProps {
+    onMessageSent?: () => void;
+}
+
+export default function ModeratorSupport({ onMessageSent }: ModeratorSupportProps = {}) {
     const [tickets, setTickets] = useState<any[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [messages, setMessages] = useState<any[]>([]);
@@ -34,12 +38,12 @@ export default function ModeratorSupport() {
 
     const loadTickets = async () => {
         const res = await getOpenTickets();
-        if (res.success) setTickets(res.tickets);
+        if (res.success && res.tickets) setTickets(res.tickets);
     };
 
     const loadMessages = async (ticketId: string) => {
         const res = await getTicketMessages(ticketId);
-        if (res.success) setMessages(res.messages);
+        if (res.success && res.messages) setMessages(res.messages);
     };
 
     const handleSend = async (e: React.FormEvent) => {

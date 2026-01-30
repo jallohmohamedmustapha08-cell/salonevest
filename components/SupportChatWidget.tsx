@@ -51,10 +51,11 @@ export default function SupportChatWidget() {
     const fetchMessages = async () => {
         if (!ticketId) return;
         const res = await getTicketMessages(ticketId);
-        if (res.success) {
+        if (res.success && res.messages) {
+            const incomingMessages = res.messages;
             // Only update if length changed to avoid jitter (or use better diffing, but simplistic is fine)
             setMessages(prev => {
-                if (res.messages.length !== prev.length) return res.messages;
+                if (incomingMessages.length !== prev.length) return incomingMessages;
                 return prev;
             });
         }
@@ -209,8 +210,8 @@ export default function SupportChatWidget() {
                                     return (
                                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
-                                                    ? 'bg-green-600 text-white rounded-br-none'
-                                                    : 'bg-gray-700 text-gray-200 rounded-bl-none'
+                                                ? 'bg-green-600 text-white rounded-br-none'
+                                                : 'bg-gray-700 text-gray-200 rounded-bl-none'
                                                 }`}>
                                                 {msg.content}
                                             </div>

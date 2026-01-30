@@ -120,7 +120,7 @@ export default function DashboardCharts({ users, projects, investments }: Dashbo
                                 fill="#8884d8"
                                 paddingAngle={5}
                                 dataKey="value"
-                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                             >
                                 {projectStatusData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -148,7 +148,7 @@ export default function DashboardCharts({ users, projects, investments }: Dashbo
                                 <Tooltip
                                     cursor={{ fill: '#374151', opacity: 0.4 }}
                                     contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
+                                    formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Amount']}
                                 />
                                 <Bar dataKey="amount" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                             </BarChart>

@@ -69,13 +69,13 @@ export default function InvestorCharts({ investments }: InvestorChartsProps) {
                                 fill="#8884d8"
                                 paddingAngle={5}
                                 dataKey="value"
-                                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                label={({ name, percent }) => `${((percent || 0) * 100).toFixed(0)}%`}
                             >
                                 {portfolioData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'Invested']} />
+                            <Tooltip formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Invested']} />
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
