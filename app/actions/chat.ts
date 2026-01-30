@@ -157,7 +157,7 @@ export async function getAllConversationsAdmin() {
         .eq('id', user.id)
         .single();
 
-    if (profile?.role !== 'admin') {
+    if (!['admin', 'moderator'].includes(profile?.role)) {
         return { error: "Unauthorized" };
     }
 

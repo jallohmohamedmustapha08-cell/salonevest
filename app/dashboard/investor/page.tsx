@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ProjectDetailsModal from "@/components/investor/ProjectDetailsModal";
+import InvestorCharts from "@/components/investor/InvestorCharts";
+import UserAvatar from "@/components/UserAvatar";
 
 interface Project {
     id: number;
@@ -34,6 +36,7 @@ export default function InvestorDashboard() {
 
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalInvested: 0, projectsFunded: 0 });
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     // Investment Modal State
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -47,12 +50,15 @@ export default function InvestorDashboard() {
         }
         setUser(user);
 
+        // Fetch user profile for avatar
+        const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
+        if (profile) setAvatarUrl(profile.avatar_url);
+
         // Fetch Wallet Balance (Real)
         const balanceRes = await import("@/app/actions/financials").then(mod => mod.getWalletBalance(user.id));
         if (balanceRes.success) setWalletBalance(balanceRes.balance || 0);
 
         // Fetch user's investments
-        // ... (keep existing investment fetch)
         const { data: investments } = await supabase
             .from('investments')
             .select('*, project:projects(*)')
@@ -69,7 +75,6 @@ export default function InvestorDashboard() {
         }
 
         // Fetch Active Projects
-        // ... (keep existing project fetch)
         const { data: projects } = await supabase
             .from('projects')
             .select('*')
@@ -87,7 +92,6 @@ export default function InvestorDashboard() {
         fetchData();
     }, [router]);
 
-    // ... (keep handleLogout and handleInvest)
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.refresh();
@@ -140,14 +144,22 @@ export default function InvestorDashboard() {
                 />
             )}
 
-            <div className="p-8 pb-20 max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto p-4 md:p-10 mb-20">
                 <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Investor Dashboard</h1>
-                        <p className="text-gray-400">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
+                    <div className="flex items-center gap-4">
+                        <UserAvatar url={avatarUrl} size={64} fallbackChar={user?.user_metadata?.full_name || user?.email || "I"} />
+                        <div>
+                            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Investor Dashboard</h1>
+                            <p className="text-gray-400">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
+                        </div>
                     </div>
                     <button onClick={handleLogout} className="px-4 py-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-900/20 text-sm font-bold transition">Sign Out</button>
                 </header>
+
+                {/* Charts */}
+                {!loading && myInvestments.length > 0 && (
+                    <InvestorCharts investments={myInvestments} />
+                )}
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -205,7 +217,6 @@ export default function InvestorDashboard() {
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    {/* ... (Keep Opportunities and Portfolio sections identical) */}
                     {/* Opportunities Section */}
                     <div>
                         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -286,7 +297,6 @@ export default function InvestorDashboard() {
                             )}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

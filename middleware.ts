@@ -64,7 +64,11 @@ export async function middleware(request: NextRequest) {
             // Redirect based on actual role
             if (role === 'investor') return NextResponse.redirect(new URL('/dashboard/investor', request.url))
             if (role === 'entrepreneur') return NextResponse.redirect(new URL('/dashboard/entrepreneur', request.url))
-            if (['staff', 'field_agent', 'verifier', 'moderator'].includes(role)) return NextResponse.redirect(new URL('/dashboard/staff', request.url))
+            if (role === 'entrepreneur') return NextResponse.redirect(new URL('/dashboard/entrepreneur', request.url))
+            if (['staff', 'field_agent'].includes(role)) return NextResponse.redirect(new URL('/dashboard/staff', request.url))
+            // Moderators are allowed in /admin now, so we don't redirect them away if they are moderator
+            if (role === 'moderator') return NextResponse.next()
+
             return NextResponse.redirect(new URL('/login', request.url))
         }
 
@@ -79,7 +83,7 @@ export async function middleware(request: NextRequest) {
         }
 
         // Protect Staff Routes
-        if (request.nextUrl.pathname.startsWith('/dashboard/staff') && !['staff', 'field_agent', 'verifier', 'moderator'].includes(role)) {
+        if (request.nextUrl.pathname.startsWith('/dashboard/staff') && !['staff', 'field_agent'].includes(role)) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
@@ -95,9 +99,10 @@ export async function middleware(request: NextRequest) {
         const role = profile?.role
 
         if (role === 'admin') return NextResponse.redirect(new URL('/admin', request.url))
+        if (role === 'moderator') return NextResponse.redirect(new URL('/dashboard/moderator', request.url))
         if (role === 'investor') return NextResponse.redirect(new URL('/dashboard/investor', request.url))
         if (role === 'entrepreneur') return NextResponse.redirect(new URL('/dashboard/entrepreneur', request.url))
-        if (['staff', 'field_agent', 'verifier', 'moderator'].includes(role)) return NextResponse.redirect(new URL('/dashboard/staff', request.url))
+        if (['staff', 'field_agent'].includes(role)) return NextResponse.redirect(new URL('/dashboard/staff', request.url))
 
         return NextResponse.redirect(new URL('/dashboard', request.url)) // Fallback
     }

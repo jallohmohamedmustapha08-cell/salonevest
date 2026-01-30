@@ -13,6 +13,7 @@ import MarketplaceManagement from "@/components/admin/MarketplaceManagement";
 import AdminProductList from "@/components/admin/AdminProductList";
 import MessagesManagement from "@/components/admin/MessagesManagement";
 import { getAllConversationsAdmin } from "@/app/actions/chat";
+import AgentVerificationLog from "@/components/admin/AgentVerificationLog";
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("overview");
@@ -21,11 +22,14 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
+    const [verificationLogs, setVerificationLogs] = useState<any[]>([]); // New State for Agent Verifications
     const [withdrawals, setWithdrawals] = useState<any[]>([]);
     const [marketplaceOrders, setMarketplaceOrders] = useState<any[]>([]);
     const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]); // New State
     const [conversations, setConversations] = useState<any[]>([]); // New State
+    const [investments, setInvestments] = useState<any[]>([]); // New State for Charts
     const [currentUserId, setCurrentUserId] = useState<string>('');
+    const [userRole, setUserRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     // Stats
@@ -40,6 +44,22 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         setLoading(true);
+
+        // Get Current User & Role
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            setCurrentUserId(user.id);
+
+            // Fetch role
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+            if (profile) {
+                setUserRole(profile.role);
+                // Force moderator to a safe tab if they are on a restricted one
+                if (profile.role === 'moderator' && ['overview', 'users', 'staff', 'withdrawals', 'settings'].includes(activeTab)) {
+                    setActiveTab('projects');
+                }
+            }
+        }
 
         // Fetch Users (Profiles)
         const { data: usersData } = await supabase
@@ -81,7 +101,7 @@ export default function AdminDashboard() {
             setProjects(formattedProjects);
         }
 
-        // Fetch Verification Reports
+        // Fetch Verification Reports (Project Reports)
         const { data: reportsData } = await supabase
             .from('verification_reports')
             .select(`
@@ -103,6 +123,31 @@ export default function AdminDashboard() {
                 created_at: r.created_at
             }));
             setReports(formattedReports);
+        }
+
+        // Fetch Agent Verification Logs
+        const { data: logsData } = await supabase
+            .from('agent_verifications')
+            .select(`
+                *,
+                agent:agent_id(*),
+                verifier:verifier_id(*)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (logsData) {
+            setVerificationLogs(logsData);
+        }
+
+        // Fetch Investments for Charts
+        const { data: investData } = await supabase
+            .from('investments')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (investData) {
+            // Note: Currently just storing them for charts, could add a tab later
+            setInvestments(investData);
         }
 
         // Fetch Withdrawals
@@ -153,11 +198,7 @@ export default function AdminDashboard() {
             setConversations(chats);
         }
 
-        // Get Current User
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            setCurrentUserId(user.id);
-        }
+
 
         setLoading(false);
     };
@@ -271,7 +312,7 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-gray-900 flex font-sans">
             {/* Sidebar */}
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
 
             {/* Main Content */}
             <main className="flex-1 p-8 overflow-y-auto">
@@ -281,7 +322,14 @@ export default function AdminDashboard() {
                     <button className="text-gray-400">Menu</button>
                 </div>
 
-                {activeTab === "overview" && <Overview stats={stats} />}
+                {activeTab === "overview" && (
+                    <Overview
+                        stats={stats}
+                        users={users}
+                        projects={projects}
+                        investments={investments}
+                    />
+                )}
 
                 {/* Users Tab */}
                 {activeTab === "users" && (
@@ -318,10 +366,19 @@ export default function AdminDashboard() {
 
                 {/* Verifications Tab */}
                 {activeTab === "verifications" && (
-                    <VerificationReports
-                        reports={reports}
-                        handleUpdateStatus={handleUpdateReportStatus}
-                    />
+                    <div className="space-y-12">
+                        {/* Agent Verifications */}
+                        <AgentVerificationLog logs={verificationLogs} />
+
+                        {/* Project Reports */}
+                        <div>
+                            <h2 className="text-xl font-bold text-white mb-4">Project Verification Reports</h2>
+                            <VerificationReports
+                                reports={reports}
+                                handleUpdateStatus={handleUpdateReportStatus}
+                            />
+                        </div>
+                    </div>
                 )}
 
                 {/* Withdrawals Tab */}

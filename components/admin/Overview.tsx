@@ -1,10 +1,15 @@
 "use client";
 
+import DashboardCharts from "./charts/DashboardCharts";
+
 interface OverviewProps {
     stats: { label: string; value: string; change: string }[];
+    users?: any[];
+    projects?: any[];
+    investments?: any[];
 }
 
-export default function Overview({ stats }: OverviewProps) {
+export default function Overview({ stats, users = [], projects = [], investments = [] }: OverviewProps) {
     return (
         <div className="space-y-8">
             <h2 className="text-3xl font-bold text-white">Dashboard Overview</h2>
@@ -21,6 +26,9 @@ export default function Overview({ stats }: OverviewProps) {
                     </div>
                 ))}
             </div>
+
+            {/* Charts Section */}
+            <DashboardCharts users={users} projects={projects} investments={investments} />
         </div>
     );
 }

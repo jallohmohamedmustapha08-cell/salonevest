@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ProjectDetailsModal from "@/components/investor/ProjectDetailsModal";
 import GroupApprovals from "@/components/entrepreneur/GroupApprovals";
 import MyGroupsList from "@/components/entrepreneur/MyGroupsList";
+import EntrepreneurCharts from "@/components/entrepreneur/EntrepreneurCharts";
 
 interface Project {
     id: number;
@@ -131,6 +132,11 @@ export default function EntrepreneurDashboard() {
                         </button>
                     </div>
                 </div>
+
+                {/* Charts */}
+                {!loading && myProjects.length > 0 && (
+                    <EntrepreneurCharts projects={myProjects} />
+                )}
 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">My Projects</h2>

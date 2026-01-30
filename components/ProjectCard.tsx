@@ -30,34 +30,38 @@ export default function ProjectCard({
     const progress = Math.min((currentFunding / fundingGoal) * 100, 100);
 
     return (
-        <Link href={`/projects/${id}`} className="block group">
-            <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-blue-500 transition duration-300 shadow-lg hover:shadow-2xl">
-                <div className="relative h-48 w-full overflow-hidden">
+        <Link href={`/projects/${id}`} className="block group h-full">
+            <div className="glass rounded-3xl overflow-hidden border border-white/10 hover:border-green-500/50 transition duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1 h-full flex flex-col">
+                <div className="relative h-56 w-full overflow-hidden">
                     <img
                         src={imageUrl}
                         alt={title}
-                        className="object-cover w-full h-full group-hover:scale-105 transition duration-500"
+                        className="object-cover w-full h-full group-hover:scale-105 transition duration-700"
                     />
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-full border border-white/20">
+                    <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-b from-black/60 to-transparent"></div>
+                    <div className="absolute top-3 right-3 bg-white/10 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
                         {category}
-                    </div>
-                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center gap-2">
-                        <span>Trust Score: {trustScore}/100</span>
-                        {groupName && (
-                            <span className="bg-blue-600 px-2 py-0.5 rounded-full border border-blue-400" title={`Group Responsibility Score: ${groupScore}`}>
-                                👥 {groupName} ({groupScore})
-                            </span>
-                        )}
                     </div>
                 </div>
 
-                <div className="p-5">
-                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-blue-400 transition">
+                <div className="p-6 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                        <div className="bg-green-500/20 text-green-300 text-xs font-bold px-2 py-1 rounded-lg border border-green-500/30">
+                            Trust Score: {trustScore}
+                        </div>
+                        {groupName && (
+                            <div className="bg-blue-500/20 text-blue-300 text-xs font-bold px-2 py-1 rounded-lg border border-blue-500/30 truncate max-w-[50%]">
+                                👥 {groupName} ({groupScore})
+                            </div>
+                        )}
+                    </div>
+
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition leading-tight">
                         {title}
                     </h3>
-                    <p className="text-gray-400 text-sm mb-4 flex items-center gap-1">
+                    <p className="text-gray-400 text-sm mb-6 flex items-center gap-1.5">
                         <svg
-                            className="w-4 h-4"
+                            className="w-4 h-4 text-gray-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -78,32 +82,32 @@ export default function ProjectCard({
                         {location}
                     </p>
 
-                    <div className="mb-4">
-                        <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-300 font-medium">
-                                ${currentFunding.toLocaleString()} raised
+                    <div className="mb-6 mt-auto">
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-white font-bold">
+                                ${currentFunding.toLocaleString()}
                             </span>
-                            <span className="text-gray-500">
+                            <span className="text-gray-400 text-xs self-end mb-0.5">
                                 of ${fundingGoal.toLocaleString()}
                             </span>
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                        <div className="w-full bg-white/5 rounded-full h-2">
                             <div
-                                className="bg-blue-500 h-2.5 rounded-full"
+                                className="bg-gradient-to-r from-green-500 to-emerald-400 h-2 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
                                 style={{ width: `${progress}%` }}
                             ></div>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-700">
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
                         <div className="text-xs text-gray-400">
                             Min Investment <br />
                             <span className="text-white font-bold text-base">
                                 ${minInvestment}
                             </span>
                         </div>
-                        <span className="text-blue-400 text-sm font-bold group-hover:underline">
-                            View Details &rarr;
+                        <span className="text-green-400 text-sm font-bold group-hover:translate-x-1 transition flex items-center gap-1">
+                            Details <span>→</span>
                         </span>
                     </div>
                 </div>

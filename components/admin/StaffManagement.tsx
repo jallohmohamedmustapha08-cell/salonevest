@@ -52,7 +52,6 @@ export default function StaffManagement({ staff, showAddStaff, setShowAddStaff, 
                             <select name="role" required className="bg-gray-700 border border-gray-600 text-white px-4 py-3 rounded-lg">
                                 <option value="staff">Staff (General)</option>
                                 <option value="field_agent">Field Agent</option>
-                                <option value="verifier">Verifier</option>
                                 <option value="moderator">Moderator</option>
                                 <option value="admin">Admin</option>
                             </select>
@@ -92,7 +91,6 @@ export default function StaffManagement({ staff, showAddStaff, setShowAddStaff, 
                                     <select name="role" defaultValue={editingStaff.role} required className="w-full bg-gray-700 border border-gray-600 text-white px-4 py-3 rounded-lg">
                                         <option value="staff">Staff (General)</option>
                                         <option value="field_agent">Field Agent</option>
-                                        <option value="verifier">Verifier</option>
                                         <option value="moderator">Moderator</option>
                                         <option value="admin">Admin</option>
                                     </select>

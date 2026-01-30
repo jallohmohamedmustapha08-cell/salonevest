@@ -36,32 +36,35 @@ export default function Explore() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-900 pb-20">
+        // Remove bg-gray-900 from root div to let body gradient show
+        <div className="min-h-screen pb-20 relative">
+
             {/* Hero Section */}
-            <section className="relative py-20 px-4 bg-gradient-to-b from-gray-800 to-gray-900 border-b border-gray-800">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                        Explore <span className="text-blue-500">High-Impact</span> Projects
+            <section className="relative py-24 px-4 overflow-hidden">
+                <div className="absolute inset-0 bg-green-900/10 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-900/40 via-transparent to-transparent"></div>
+
+                <div className="max-w-6xl mx-auto text-center relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
+                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">High-Impact</span> Projects
                     </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-                        Discover and fund vetted agricultural and tech initiatives in Sierra Leone.
-                        Backed by AI risk assessment and secured by blockchain.
+                    <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+                        Discover vetted opportunities. Backed by AI risk assessment and secured by blockchain transparently.
                     </p>
 
                     {/* Search/Filter Bar */}
-                    <div className="max-w-3xl mx-auto bg-gray-800 p-2 rounded-full border border-gray-700 flex flex-col md:flex-row gap-2 shadow-xl">
+                    <div className="max-w-3xl mx-auto glass p-2 rounded-full border border-white/20 flex flex-col md:flex-row gap-2 shadow-2xl">
                         <input
                             type="text"
                             placeholder="Search by location or crop..."
-                            className="flex-grow bg-transparent text-white px-6 py-3 focus:outline-none"
+                            className="flex-grow bg-transparent text-white px-6 py-3 focus:outline-none placeholder-gray-400"
                         />
-                        <select className="bg-gray-700 text-white px-6 py-3 rounded-full border-none focus:ring-0 cursor-pointer hover:bg-gray-600 transition">
+                        <select className="bg-white/5 text-white px-6 py-3 rounded-full border border-white/10 focus:ring-0 cursor-pointer hover:bg-white/10 transition [&>option]:bg-gray-900">
                             <option value="all">All Categories</option>
                             <option value="agriculture">Agriculture</option>
                             <option value="tech">Technology</option>
                             <option value="retail">Retail</option>
                         </select>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-bold transition">
+                        <button className="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-full font-bold transition shadow-lg shadow-green-900/20">
                             Search
                         </button>
                     </div>
@@ -69,15 +72,21 @@ export default function Explore() {
             </section>
 
             {/* Projects Grid */}
-            <section className="max-w-7xl mx-auto px-4 py-16">
-                <div className="flex justify-between items-end mb-8">
-                    <h2 className="text-2xl font-bold text-white">Trending Opportunities</h2>
+            <section className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <span className="bg-orange-500 w-2 h-8 rounded-full"></span>
+                        Trending Opportunities
+                    </h2>
                 </div>
 
                 {loading ? (
-                    <div className="text-center text-gray-500">Loading projects...</div>
+                    <div className="text-center text-gray-400 py-12 animate-pulse">Loading amazing projects...</div>
                 ) : projects.length === 0 ? (
-                    <div className="text-center text-gray-500 p-10 bg-gray-800 rounded-xl">No active projects found yet.</div>
+                    <div className="text-center text-gray-400 py-20 bg-white/5 rounded-3xl border border-white/5">
+                        <p className="text-xl mb-2">No active projects found yet.</p>
+                        <p className="text-sm">Check back later or adjust your filters.</p>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                         {projects.map((project) => {

@@ -282,8 +282,8 @@ export default function ProjectManagement({ projects, staff, handleApproveProjec
                                         defaultValue={project.assigned_staff_id || ""}
                                     >
                                         <option value="">Assign Staff...</option>
-                                        {staff.map(s => (
-                                            <option key={s.id} value={s.id}>{s.full_name || s.name}</option>
+                                        {staff.filter(s => s.status === 'Verified').map(s => (
+                                            <option key={s.id} value={s.id}>{s.full_name || s.name} {s.role === 'field_agent' ? '(Agent)' : ''}</option>
                                         ))}
                                     </select>
 
