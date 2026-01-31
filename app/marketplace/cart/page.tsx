@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import PaymentModal from '@/components/common/PaymentModal';
+import { safeStorage } from '@/utils/safeStorage';
 
 export default function CartPage() {
     const [cart, setCart] = useState<any[]>([]);
@@ -15,7 +16,7 @@ export default function CartPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const storedCart = JSON.parse(localStorage.getItem('marketplace_cart') || '[]');
+        const storedCart = JSON.parse(safeStorage.getItem('marketplace_cart') || '[]');
         setCart(storedCart);
     }, []);
 
@@ -27,13 +28,13 @@ export default function CartPage() {
             return item;
         });
         setCart(newCart);
-        localStorage.setItem('marketplace_cart', JSON.stringify(newCart));
+        safeStorage.setItem('marketplace_cart', JSON.stringify(newCart));
     };
 
     const removeItem = (id: string) => {
         const newCart = cart.filter(item => item.id !== id);
         setCart(newCart);
-        localStorage.setItem('marketplace_cart', JSON.stringify(newCart));
+        safeStorage.setItem('marketplace_cart', JSON.stringify(newCart));
     };
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -56,7 +57,7 @@ export default function CartPage() {
                 alert('Error placing order: ' + result.error);
             } else {
                 alert('Payment successful! Order placed.');
-                localStorage.removeItem('marketplace_cart');
+                safeStorage.removeItem('marketplace_cart');
                 setCart([]);
                 router.push('/marketplace/orders');
             }

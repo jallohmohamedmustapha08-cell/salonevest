@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { safeStorage } from '@/utils/safeStorage';
 
 export default function ProductActions({ product }: { product: any }) {
     const [quantity, setQuantity] = useState(1);
@@ -8,7 +9,7 @@ export default function ProductActions({ product }: { product: any }) {
 
     useEffect(() => {
         const updateCartQuantity = () => {
-            const cart = JSON.parse(localStorage.getItem('marketplace_cart') || '[]');
+            const cart = JSON.parse(safeStorage.getItem('marketplace_cart') || '[]');
             const existingItem = cart.find((item: any) => item.id === product.id);
             setCartQuantity(existingItem ? existingItem.quantity : 0);
         };
@@ -26,7 +27,7 @@ export default function ProductActions({ product }: { product: any }) {
             return;
         }
 
-        const cart = JSON.parse(localStorage.getItem('marketplace_cart') || '[]');
+        const cart = JSON.parse(safeStorage.getItem('marketplace_cart') || '[]');
         const existingItem = cart.find((item: any) => item.id === product.id);
 
         if (existingItem) {
@@ -35,7 +36,7 @@ export default function ProductActions({ product }: { product: any }) {
             cart.push({ ...product, quantity: quantity });
         }
 
-        localStorage.setItem('marketplace_cart', JSON.stringify(cart));
+        safeStorage.setItem('marketplace_cart', JSON.stringify(cart));
         alert(`Added ${quantity} item(s) to cart!`);
         setQuantity(1); // Reset selector
         window.dispatchEvent(new Event('cart-updated'));

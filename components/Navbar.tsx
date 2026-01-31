@@ -91,7 +91,22 @@ export default function Navbar({ user }: { user: any }) {
     <nav className="fixed w-full z-50 top-0 start-0 glass border-b border-white/5">
       <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto p-4">
         <Link href="/" className="flex items-center space-x-2 rtl:space-x-reverse group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition">S</div>
+          <div className="w-8 h-8 relative rounded-lg bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-105 transition overflow-hidden">
+            {/* Logo Image */}
+            <img
+              src="/logo.png"
+              alt="S"
+              className="w-full h-full object-contain p-1"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.classList.add('fallback-mode');
+              }}
+            />
+            <span className="absolute inset-0 flex items-center justify-center text-white font-bold hidden fallback-text">S</span>
+            <style jsx>{`
+                .fallback-mode .fallback-text { display: flex !important; }
+             `}</style>
+          </div>
           <span className="self-center text-2xl font-bold whitespace-nowrap text-white tracking-tight">
             Salone<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Vest</span>
           </span>

@@ -11,6 +11,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "SaloneVest | Bridge Diaspora Capital to Local Agriculture",
     description: "A dual-sided fintech marketplace bridging Sierra Leonean Diaspora capital and local youth-led agricultural enterprises.",
+    icons: {
+        icon: "/logo.png",
+        apple: "/logo.png", // Or a specific apple touch icon if available later
+    },
 };
 
 export default async function RootLayout({
@@ -46,7 +50,7 @@ export default async function RootLayout({
 
     return (
         <html lang="en" className="dark" suppressHydrationWarning>
-            <body className={`${inter.className} bg-[var(--background)] text-[var(--foreground)] antialiased min-h-screen selection:bg-green-500 selection:text-white`}>
+            <body className={`${inter.className} bg-[var(--background)] text-[var(--foreground)] antialiased min-h-screen selection:bg-green-500 selection:text-white`} suppressHydrationWarning>
                 <LayoutWrapper user={user}>
                     {children}
                     <SupportChatWidget />

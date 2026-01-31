@@ -5,10 +5,11 @@ interface SidebarProps {
     activeTab: string;
     setActiveTab: (tab: string) => void;
     userRole?: string | null;
+    userName?: string | null;
     badges?: Record<string, number>;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, userRole = 'admin', badges = {} }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, userRole = 'admin', userName, badges = {} }: SidebarProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -27,7 +28,14 @@ export default function Sidebar({ activeTab, setActiveTab, userRole = 'admin', b
     return (
         <aside className="w-64 bg-gray-800 border-r border-gray-700 hidden md:flex flex-col">
             <div className="p-6 border-b border-gray-700">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Salone<span className="text-green-500">Admin</span></h1>
+                {userRole === 'moderator' && userName ? (
+                    <div className="flex flex-col">
+                        <span className="text-xs text-green-500 font-bold uppercase tracking-wider">Moderator Panel</span>
+                        <h1 className="text-xl font-bold text-white tracking-tight truncate" title={userName}>{userName}</h1>
+                    </div>
+                ) : (
+                    <h1 className="text-2xl font-bold text-white tracking-tight">Salone<span className="text-green-500">Admin</span></h1>
+                )}
             </div>
             <nav className="flex-1 overflow-y-auto py-4">
                 {getTabs().map((tab) => (

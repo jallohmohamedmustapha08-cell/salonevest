@@ -26,6 +26,7 @@ export default function ModeratorDashboard() {
     const [currentUserId, setCurrentUserId] = useState<string>('');
     const [staff, setStaff] = useState<any[]>([]); // Needed for ProjectManagement filter
     const [supportCount, setSupportCount] = useState(0);
+    const [userName, setUserName] = useState<string>(''); // New state
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -34,6 +35,9 @@ export default function ModeratorDashboard() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             setCurrentUserId(user.id);
+            // Fetch profile name
+            const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+            if (profile) setUserName(profile.full_name || 'Moderator');
         }
 
         // 1. Fetch Projects
@@ -158,6 +162,7 @@ export default function ModeratorDashboard() {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 userRole="moderator"
+                userName={userName}
                 badges={{ support: supportCount }}
             />
 

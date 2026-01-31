@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createSupportTicket, sendGuestMessage, getTicketMessages } from "@/app/actions/support";
 
+import { safeStorage } from "@/utils/safeStorage";
+
 export default function SupportChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [view, setView] = useState<'form' | 'chat'>('form');
@@ -22,8 +24,8 @@ export default function SupportChatWidget() {
 
     // Load session from local storage
     useEffect(() => {
-        const storedTicket = localStorage.getItem('support_ticket_id');
-        const storedEmail = localStorage.getItem('support_email');
+        const storedTicket = safeStorage.getItem('support_ticket_id');
+        const storedEmail = safeStorage.getItem('support_email');
         if (storedTicket && storedEmail) {
             setTicketId(storedTicket);
             setEmail(storedEmail);
@@ -68,8 +70,8 @@ export default function SupportChatWidget() {
         const res = await createSupportTicket(name, email);
         if (res.success) {
             setTicketId(res.ticket.id);
-            localStorage.setItem('support_ticket_id', res.ticket.id);
-            localStorage.setItem('support_email', email);
+            safeStorage.setItem('support_ticket_id', res.ticket.id);
+            safeStorage.setItem('support_email', email);
             setView('chat');
         } else {
             alert("Failed to start chat: " + res.error);
@@ -108,8 +110,8 @@ export default function SupportChatWidget() {
 
     const handleEndChat = () => {
         if (confirm("End this conversation?")) {
-            localStorage.removeItem('support_ticket_id');
-            localStorage.removeItem('support_email');
+            safeStorage.removeItem('support_ticket_id');
+            safeStorage.removeItem('support_email');
             setTicketId(null);
             setMessages([]);
             setView('form');

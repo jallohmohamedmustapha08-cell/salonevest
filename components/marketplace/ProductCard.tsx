@@ -12,11 +12,13 @@ interface Product {
     entrepreneur_id: string;
 }
 
+import { safeStorage } from '@/utils/safeStorage';
+
 export default function ProductCard({ product }: { product: Product }) {
     const addToCart = (e: React.MouseEvent) => {
         e.preventDefault();
         // Simple localStorage cart implementation
-        const cart = JSON.parse(localStorage.getItem('marketplace_cart') || '[]');
+        const cart = JSON.parse(safeStorage.getItem('marketplace_cart') || '[]');
         const existingItem = cart.find((item: any) => item.id === product.id);
 
         if (existingItem) {
@@ -25,7 +27,7 @@ export default function ProductCard({ product }: { product: Product }) {
             cart.push({ ...product, quantity: 1 });
         }
 
-        localStorage.setItem('marketplace_cart', JSON.stringify(cart));
+        safeStorage.setItem('marketplace_cart', JSON.stringify(cart));
         alert('Added to cart!');
         // Trigger a custom event or use context to update cart count in navbar if we had one
         window.dispatchEvent(new Event('cart-updated'));
