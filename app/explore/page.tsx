@@ -20,6 +20,8 @@ interface Project {
 export default function Explore() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("all");
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -34,6 +36,25 @@ export default function Explore() {
         };
         fetchProjects();
     }, []);
+
+    const filteredProjects = projects.filter(project => {
+        const lowerQuery = searchQuery.toLowerCase();
+        const matchesSearch =
+            project.title.toLowerCase().includes(lowerQuery) ||
+            project.description.toLowerCase().includes(lowerQuery) ||
+            (project.location || "").toLowerCase().includes(lowerQuery);
+
+        if (categoryFilter === "all") return matchesSearch;
+
+        // Simple keyword inference for category key matching
+        const lowerDesc = (project.description + project.title).toLowerCase();
+        let inferredCategory = "general";
+        if (lowerDesc.includes('farm') || lowerDesc.includes('rice') || lowerDesc.includes('crop') || lowerDesc.includes('cocoa') || lowerDesc.includes('agriculture')) inferredCategory = "agriculture";
+        else if (lowerDesc.includes('tech') || lowerDesc.includes('app') || lowerDesc.includes('digital') || lowerDesc.includes('software')) inferredCategory = "tech";
+        else if (lowerDesc.includes('shop') || lowerDesc.includes('market') || lowerDesc.includes('retail') || lowerDesc.includes('store')) inferredCategory = "retail";
+
+        return matchesSearch && inferredCategory === categoryFilter;
+    });
 
     return (
         // Remove bg-gray-900 from root div to let body gradient show
@@ -55,10 +76,16 @@ export default function Explore() {
                     <div className="max-w-3xl mx-auto glass p-2 rounded-full border border-white/20 flex flex-col md:flex-row gap-2 shadow-2xl">
                         <input
                             type="text"
-                            placeholder="Search by location or crop..."
+                            placeholder="Search by location, title or description..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="flex-grow bg-transparent text-white px-6 py-3 focus:outline-none placeholder-gray-400"
                         />
-                        <select className="bg-white/5 text-white px-6 py-3 rounded-full border border-white/10 focus:ring-0 cursor-pointer hover:bg-white/10 transition [&>option]:bg-gray-900">
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="bg-white/5 text-white px-6 py-3 rounded-full border border-white/10 focus:ring-0 cursor-pointer hover:bg-white/10 transition [&>option]:bg-gray-900"
+                        >
                             <option value="all">All Categories</option>
                             <option value="agriculture">Agriculture</option>
                             <option value="tech">Technology</option>
@@ -78,19 +105,20 @@ export default function Explore() {
                         <span className="bg-orange-500 w-2 h-8 rounded-full"></span>
                         Trending Opportunities
                     </h2>
+                    <span className="text-sm text-gray-400">Showing {filteredProjects.length} projects</span>
                 </div>
 
                 {loading ? (
                     <div className="text-center text-gray-400 py-12 animate-pulse">Loading amazing projects...</div>
-                ) : projects.length === 0 ? (
+                ) : filteredProjects.length === 0 ? (
                     <div className="text-center text-gray-400 py-20 bg-white/5 rounded-3xl border border-white/5">
-                        <p className="text-xl mb-2">No active projects found yet.</p>
-                        <p className="text-sm">Check back later or adjust your filters.</p>
+                        <p className="text-xl mb-2">No projects found matching your criteria.</p>
+                        <p className="text-sm">Try using simpler keywords or clearing filters.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {projects.map((project) => {
-                            // Simple keyword inference for category
+                        {filteredProjects.map((project) => {
+                            // Simple keyword inference for category for display
                             const lowerDesc = (project.description + project.title).toLowerCase();
                             let inferredCategory = "General";
                             if (lowerDesc.includes('farm') || lowerDesc.includes('rice') || lowerDesc.includes('crop') || lowerDesc.includes('cocoa')) inferredCategory = "Agriculture";
